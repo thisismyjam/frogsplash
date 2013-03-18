@@ -34,4 +34,4 @@ Caveats
 FrogSplash uses [inotify](https://github.com/seb-m/pyinotify/wiki) to tail
 log files, so Linux is (currently) the only supported platform.
 
-It uses [regex](https://pypi.python.org/pypi/regex) instead of [re](http://docs.python.org/2/library/re.html). The regex module has worked fine for me, but there may be bugs.
+Instead of [re](http://docs.python.org/2/library/re.html), it uses the experimental [regex](https://pypi.python.org/pypi/regex) module. So far I haven't encountered any problems, but there may be bugs.
