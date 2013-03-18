@@ -6,6 +6,8 @@ It tries to satisfy the minimum use case of tailing a log file, parsing it with
 [grok](http://code.google.com/p/semicomplete/wiki/GrokConcepts), and indexing in 
 ElasticSearch.
 
+![logo](https://raw.github.com/andreasjansson/frogsplash/master/logo.png)
+
 Installation
 ------------
 
