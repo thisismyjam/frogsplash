@@ -119,7 +119,7 @@ def frogsplash(elastic_host, elastic_port, filename, patterns, log_type, source,
         if not dry_run:
             send_to_elastic_search(es, match.captures, match.subject, log_type, source)
         if verbose:
-            debug_match(match)
+            debug_match(match.captures)
 
     tail = Tail(filename, handle_line)
 
