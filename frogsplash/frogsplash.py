@@ -1,4 +1,3 @@
-from grok import Grok
 import argparse
 import pyinotify
 import os
@@ -8,6 +7,7 @@ import pyes
 import datetime
 import stat
 import socket
+from grok import Grok
 
 def die(message):
     sys.stderr.write(message + '\n')
@@ -123,7 +123,7 @@ def frogsplash(elastic_host, elastic_port, filename, patterns, log_type, source,
 
     tail = Tail(filename, handle_line)
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Tail file; grok; send to Elasticsearch in logstash format')
     parser.add_argument('-H', '--host', default='localhost',
                         help='Elasticsearch host')
@@ -142,3 +142,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     frogsplash(args.host, args.port, args.file, args.grok, args.type, args.source,
                args.verbose, args.dry_run)
+
+if __name__ == '__main__':
+    main()

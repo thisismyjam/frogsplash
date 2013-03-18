@@ -1,24 +1,31 @@
-import regex
+import regex as re
 import os
 
 class Grok(object):
 
-    PATTERN_RE = regex.compile(r'''
+    PATTERN_RE = re.compile(r'''
     %\{   
-       (?<name>
-         (?<pattern>[A-z0-9]+)
-         (?::(?<subname>[A-z0-9_:]+))?
+       (?P<name>
+         (?P<pattern>[A-z0-9]+)
+         (?::(?P<subname>[A-z0-9_:]+))?
        )
-       (?:=(?<definition>
+       (?:=(?P<definition>
          (?:
            (?:[^{}\\]+|\\.+)+
            |
-           (?<curly>\{(?:(?>[^{}]+|(?>\\[{}])+)|(\g<curly>))*\})+
+           (?P<curly>\{(?:
+
+               # emulate atomic grouping:
+               (?=(?P<tmp1>[^{}]+|
+                   (?=(?P<tmp2>\\[{}]))(?P=tmp2)
+               ))(?P=tmp1)
+
+               |(\g<curly>))*\})+
          )+
        ))?
        [^}]*
      \}
-     ''', regex.VERBOSE)
+     ''', re.VERBOSE)
 
     def __init__(self):
         self.patterns = {}
@@ -31,10 +38,10 @@ class Grok(object):
             for line in f.readlines():
                 line = line.strip()
                 # Skip comments
-                if regex.match(r'^\s*#', line):
+                if re.match(r'^\s*#', line):
                     continue
                 # File format is: NAME ' '+ PATTERN '\n'
-                split = regex.sub(r'^\s*', '', line).split(None, 1)
+                split = re.sub(r'^\s*', '', line).split(None, 1)
                 if len(split) < 2:
                     continue
                 name, pattern = split
@@ -73,14 +80,14 @@ class Grok(object):
             if m_pattern in self.patterns:
                 r = self.patterns[m_pattern]
                 capture = 'a%s' % index
-                replacement_pattern = '(?<%s>%s)' % (capture, r)
+                replacement_pattern = '(?P<%s>%s)' % (capture, r)
                 self.expanded_pattern = self.expanded_pattern.replace(m.group(0), replacement_pattern, 1)
 
                 self.capture_map[capture] = m_name
 
                 index += 1
 
-        self.regex = regex.compile(self.expanded_pattern)
+        self.regex = re.compile(self.expanded_pattern)
 
     def match(self, text):
         text = str(text)

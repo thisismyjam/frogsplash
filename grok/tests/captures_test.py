@@ -13,7 +13,7 @@ class GrokPatternCapturingTests(unittest.TestCase):
     self.grok.compile("%{foo}")
     input = "hello world"
     match = self.grok.match(input)
-    self.assertEqual("(?<a0>.*)", self.grok.expanded_pattern)
+    self.assertEqual("(?P<a0>.*)", self.grok.expanded_pattern)
     self.assertEqual(1, len(match.captures))
     self.assertEqual(1, len(match.captures["foo"]))
     self.assertEqual(input, match.captures["foo"][0])
