@@ -5,27 +5,20 @@ class Grok(object):
 
     PATTERN_RE = re.compile(r'''
     %\{   
-       (?P<name>
-         (?P<pattern>[A-z0-9]+)
-         (?::(?P<subname>[A-z0-9_:]+))?
+       (?<name>
+         (?<pattern>[A-z0-9]+)
+         (?::(?<subname>[A-z0-9_:]+))?
        )
-       (?:=(?P<definition>
+       (?:=(?<definition>
          (?:
            (?:[^{}\\]+|\\.+)+
            |
-           (?P<curly>\{(?:
-
-               # emulate atomic grouping:
-               (?=(?P<tmp1>[^{}]+|
-                   (?=(?P<tmp2>\\[{}]))(?P=tmp2)
-               ))(?P=tmp1)
-
-               |(\g<curly>))*\})+
+           (?<curly>\{(?:(?>[^{}]+|(?>\\[{}])+)|(\g<curly>))*\})+
          )+
        ))?
        [^}]*
      \}
-     ''', re.VERBOSE)
+    ''', re.VERBOSE)
 
     def __init__(self):
         self.patterns = {}
@@ -80,7 +73,7 @@ class Grok(object):
             if m_pattern in self.patterns:
                 r = self.patterns[m_pattern]
                 capture = 'a%s' % index
-                replacement_pattern = '(?P<%s>%s)' % (capture, r)
+                replacement_pattern = '(?<%s>%s)' % (capture, r)
                 self.expanded_pattern = self.expanded_pattern.replace(m.group(0), replacement_pattern, 1)
 
                 self.capture_map[capture] = m_name
