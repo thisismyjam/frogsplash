@@ -89,3 +89,4 @@ QS %{QUOTEDSTRING}
 # Log formats
 SYSLOGBASE %{SYSLOGTIMESTAMP:timestamp} (?:%{SYSLOGFACILITY} )?%{SYSLOGHOST:logsource} %{SYSLOGPROG}:
 COMBINEDAPACHELOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:timestamp}\] "%{WORD:verb} %{URIPATHPARAM:request} HTTP/%{NUMBER:httpversion}" %{NUMBER:response} (?:%{NUMBER:bytes}|-) "(?:%{URI:referrer}|-)" %{QS:agent}
+PHP_ERROR_LOG \[%{errordate=%{DAY} %{MONTH} %{MONTHDAY} %{TIME} %{YEAR}}\] \[error\] (?:\[client %{IP}\] )?PHP %{severity=.+}:  %{error=.+?}(?:, referer: %{referrer=%{URI}})?$

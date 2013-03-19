@@ -26,8 +26,8 @@ where
  * -d, --dry-run dry-runs FrogSplash, meaning it won't send anything to ElasticSearch
  * -t, --type is the "type", as sent to ElasticSearch (e.g. "apache")
  * -s, --source is the "source", as sent to ElasticSearch (e.g. "10.0.1.27")
- * -m, --multiline is a multiline grok pattern. If matched, appends the line to the subject of the previous match. Useful for exceptions that span multiple lines, etc.
- * -g, --grok is a grok pattern (you can use this parameter more than once for multiple patterns, but only the first match will be used)
+ * -m, --multiline is a multiline grok pattern. If matched, appends the line to the subject of the previous match. Useful for exceptions that span multiple lines, etc. This parameter can be used multiple times
+ * -g, --grok is a grok pattern. You can use this parameter more than once for multiple patterns, but only the first match will be used.
  * file is the log file to tail
 
 Caveats
