@@ -6,7 +6,7 @@ It tries to satisfy the minimum use case of tailing a log file, parsing it with
 [grok](http://code.google.com/p/semicomplete/wiki/GrokConcepts), and indexing in 
 ElasticSearch (using Logstash's [format](https://github.com/logstash/logstash/wiki/logstash%27s-internal-message-format), which can be read by tools like [Kibana](http://kibana.org/)).
 
-![logo](https://raw.github.com/andreasjansson/frogsplash/master/logo.png)
+![logo](https://raw.github.com/thisismyjam/frogsplash/master/logo.png)
 
 Installation
 ------------
