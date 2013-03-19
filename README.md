@@ -24,9 +24,10 @@ where
  * -p, --port is the ElasticSearch port
  * -v, --verbose enables verbose output
  * -d, --dry-run dry-runs FrogSplash, meaning it won't send anything to ElasticSearch
- * -t, --type is the "type", as sent to ElasticSearch
- * -s, --source is the "source", as sent to ElasticSearch
+ * -t, --type is the "type", as sent to ElasticSearch (e.g. "apache")
+ * -s, --source is the "source", as sent to ElasticSearch (e.g. "10.0.1.27")
  * -g, --grok is a grok pattern (you can use this parameter more than once for multiple patterns, but only the first match will be used)
+ * file is the log file to tail
 
 Caveats
 -------

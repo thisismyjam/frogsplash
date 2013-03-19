@@ -97,6 +97,7 @@ def send_to_elastic_search(es, fields, message, log_type, source):
     index = {
         '@timestamp': now.isoformat(),
         '@source': source,
+        '@type': log_type,
         '@fields': 
             dict((key, ','.join(value)) for key, value in fields.items())
             ,
