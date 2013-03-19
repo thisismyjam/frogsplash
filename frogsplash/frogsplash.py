@@ -1,3 +1,5 @@
+# TODO: proper error handing
+
 import argparse
 import pyinotify
 import os
@@ -15,8 +17,12 @@ def die(message):
     sys.exit(1)
 
 class Tail(object):
-
-    def __init__(self, filename, callback):
+    '''
+    Inofity-based tail clone. Is capable of handling
+    truncates, renames, deletes and creates. Calls
+    line_handler on every added line
+    '''
+    def __init__(self, filename, line_handler):
         self.filename = os.path.abspath(filename)
         if not os.path.exists(self.filename):
             die('No such file: %s' % filename)
@@ -25,7 +31,7 @@ class Tail(object):
 
         self.f = open(filename, 'r')
         self.f.seek(0, 2)
-        self.callback = callback
+        self.line_handler = line_handler
 
         watch_manager = pyinotify.WatchManager()
         notifier = pyinotify.Notifier(watch_manager, Tail.ProcessEvent(self))
@@ -52,7 +58,7 @@ class Tail(object):
             if not line:
                 break
             line = line.split('\n')[0]
-            self.callback(line)
+            self.line_handler(line)
 
     class ProcessEvent(pyinotify.ProcessEvent):
 
@@ -75,7 +81,6 @@ class Tail(object):
 
 
 class Frogsplash(object):
-
     def __init__(self, elastic_host, elastic_port, filename, patterns, log_type, source,
                  multiline_patterns, verbose, dry_run):
         self.elastic_host = elastic_host
@@ -89,6 +94,7 @@ class Frogsplash(object):
             self.pending = None
             self.pending_timer = None
             self.pending_timeout = 5
+            # TODO: self.pending_log_time to send the correct timestamp
         else:
             self.multiline_groks = None
         self.verbose = verbose
@@ -111,21 +117,6 @@ class Frogsplash(object):
         else:
             sys.stderr.write('Failed to match line: "%s"\n' % line)
 
-    def send_pending(self):
-        if self.pending:
-            self.send_to_elastic_search(self.pending.captures, self.pending.subject)
-            self.pending = None
-        self.cancel_pending_timer()
-
-    def cancel_pending_timer(self):
-        if self.pending_timer:
-            self.pending_timer.cancel()
-            self.pending_timer = None
-
-    def set_pending_timer(self):
-        self.pending_timer = threading.Timer(self.pending_timeout, self.send_pending)
-        self.pending_timer.start()
-
     def handle_multiline(self, line):
         self.cancel_pending_timer()
 
@@ -142,6 +133,21 @@ class Frogsplash(object):
             self.set_pending_timer()
         else:
             sys.stderr.write('Failed to match line: "%s"\n' % line)
+
+    def set_pending_timer(self):
+        self.pending_timer = threading.Timer(self.pending_timeout, self.send_pending)
+        self.pending_timer.start()
+
+    def cancel_pending_timer(self):
+        if self.pending_timer:
+            self.pending_timer.cancel()
+            self.pending_timer = None
+
+    def send_pending(self):
+        if self.pending:
+            self.send_to_elastic_search(self.pending.captures, self.pending.subject)
+            self.pending = None
+        self.cancel_pending_timer()
 
     def send_to_elastic_search(self, fields, message):
         now = datetime.datetime.now()
