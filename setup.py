@@ -11,7 +11,7 @@ setup(name = 'frogsplash',
         'regex',
         'argparse',
         'pyinotify',
-        'pyes',
+        'pyes == 0.19.1',
         ],
       entry_points = {
         'console_scripts': [
