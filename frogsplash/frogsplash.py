@@ -10,10 +10,13 @@ import datetime
 import stat
 import socket
 import threading
+import logging
 from grok import Grok
 
+logging.basicConfig()
+
 def die(message):
-    sys.stderr.write(message + '\n')
+    logging.error(message)
     sys.exit(1)
 
 class Tail(object):
@@ -45,7 +48,7 @@ class Tail(object):
 
     def check_truncate(self):
         if os.stat(self.filename)[stat.ST_SIZE] < self.f.tell():
-            sys.stderr.write('Log file truncated\n')
+            logging.warning('Log file truncated')
             self.f.seek(0)
 
     def reopen(self):
@@ -75,7 +78,7 @@ class Tail(object):
         def process_IN_CREATE(self, event):
             if self.tail.filename != event.path + '/' + event.name:
                 return
-            sys.stderr.write('Log file re-created, re-opening\n')
+            logging.warning('Log file re-created, re-opening')
             self.tail.reopen()
             self.tail.lines_added()
 
@@ -101,7 +104,7 @@ class Frogsplash(object):
         self.dry_run = dry_run
 
         if not self.dry_run:
-            self.es = pyes.ES('%s:%d' % (self.elastic_host, self.elastic_port))
+            self.es = pyes.ES('%s:%d' % (self.elastic_host, self.elastic_port), timeout=1)
 
         if self.multiline_groks:
             handle_line = self.handle_multiline
@@ -115,7 +118,7 @@ class Frogsplash(object):
         if match:
             self.send_to_elastic_search(match.captures, match.subject)
         else:
-            sys.stderr.write('Failed to match line: "%s"\n' % line)
+            logging.warning('Failed to match line: "%s"' % line)
 
     def handle_multiline(self, line):
         self.cancel_pending_timer()
@@ -132,7 +135,7 @@ class Frogsplash(object):
             self.pending = match
             self.set_pending_timer()
         else:
-            sys.stderr.write('Failed to match line: "%s"\n' % line)
+            logging.warning('Failed to match line: "%s"' % line)
 
     def set_pending_timer(self):
         self.pending_timer = threading.Timer(self.pending_timeout, self.send_pending)
@@ -149,7 +152,7 @@ class Frogsplash(object):
             self.pending = None
         self.cancel_pending_timer()
 
-    def send_to_elastic_search(self, fields, message):
+    def send_to_elastic_search(self, fields, message, attempts=3):
         now = datetime.datetime.now()
         data = {
             '@timestamp': now.isoformat(),
@@ -158,11 +161,19 @@ class Frogsplash(object):
             '@fields': dict((key, ','.join(value)) for key, value in fields.items()),
             '@message': message
             }
-        if not self.dry_run:
-            index = 'logstash-%s' % now.strftime('%Y.%m.%d')
-            self.es.index(data, index, self.log_type)
+
         if self.verbose:
             print json.dumps(data)
+        
+        if not self.dry_run:
+            index = 'logstash-%s' % now.strftime('%Y.%m.%d')
+            while attempts > 0:
+                try:
+                    self.es.index(data, index, self.log_type)
+                    break
+                except pyes.exceptions.NoServerAvailable:
+                    attempts -= 1
+                    logging.warning('Server timed out, attempts left: %d' % attempts)
 
     def make_groks(self, patterns):
         groks = []
