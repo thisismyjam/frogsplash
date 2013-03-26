@@ -104,7 +104,8 @@ class Frogsplash(object):
         self.dry_run = dry_run
 
         if not self.dry_run:
-            self.es = pyes.ES('%s:%d' % (self.elastic_host, self.elastic_port), timeout=1)
+            self.es = pyes.ES('%s:%d' % (self.elastic_host, self.elastic_port), timeout=1.0)
+            self.es.connection._retry_time = 0 # try to reconnect immediately
 
         if self.multiline_groks:
             handle_line = self.handle_multiline
@@ -152,7 +153,7 @@ class Frogsplash(object):
             self.pending = None
         self.cancel_pending_timer()
 
-    def send_to_elastic_search(self, fields, message, attempts=3):
+    def send_to_elastic_search(self, fields, message):
         now = datetime.datetime.now()
         data = {
             '@timestamp': now.isoformat(),
@@ -167,13 +168,10 @@ class Frogsplash(object):
         
         if not self.dry_run:
             index = 'logstash-%s' % now.strftime('%Y.%m.%d')
-            while attempts > 0:
-                try:
-                    self.es.index(data, index, self.log_type)
-                    break
-                except pyes.exceptions.NoServerAvailable:
-                    attempts -= 1
-                    logging.warning('Server timed out, attempts left: %d' % attempts)
+            try:
+                self.es.index(data, index, self.log_type)
+            except pyes.exceptions.NoServerAvailable:
+                pass
 
     def make_groks(self, patterns):
         groks = []
