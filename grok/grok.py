@@ -2,6 +2,15 @@ import regex as re
 import os
 
 class Grok(object):
+    '''
+    Basic usage:
+
+    g = Grok()
+    g.add_base_patterns()
+    g.compile(grok_pattern)
+    match = g.match(string)
+    captures = match.captures
+    '''
 
     PATTERN_RE = re.compile(r'''
     %\{   
@@ -95,7 +104,30 @@ class Grok(object):
     def capture_name(self, id):
         return self.capture_map[id]
 
+    # convenience function, parses a log file and returns a
+    # triple of
+    #   1) the parsed file as a numpy matrix,
+    #   2) the unique field names and their index, and
+    #   3) a list of line numbers where the line wasn't matched
+    def parse_file(self, filename):
+        import numpy as np
+        with open(filename, 'r') as f:
+            lines = f.read().split('\n')
+            matches = np.array(map(self.match, lines))
+            non_matching_lines = np.where(matches == False)
+            captures = np.array([m.captures for m in matches if m != False])
 
+            unique_fields = [list(x) for x in
+                             set(tuple(d.keys()) for d in captures)][0]
+
+            # only capture first of each field
+            data = np.array([
+                    [c[f][0] if f in c else ''
+                     for f in unique_fields]
+                    for c in captures])
+
+            unique_fields = zip(unique_fields, range(len(unique_fields)))
+            return data, unique_fields, non_matching_lines
 
 class Match(object):
 
